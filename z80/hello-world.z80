@@ -1,0 +1,25 @@
+   DEVICE ZXSPECTRUM48
+
+   org $8000
+
+hello:
+    db "Hello World!"
+hello_length = 12
+
+
+start:
+    ld hl, hello
+    ld b, hello_length
+    ld a, (hl)
+loop:
+    ld a, (hl)
+    rst $10
+    ld a, b
+    dec a
+    ld b, a
+    inc hl
+    jr nz, loop
+
+    ret
+
+    SAVESNA "hello-world.sna", start

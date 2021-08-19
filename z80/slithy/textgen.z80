@@ -1,0 +1,53 @@
+    DEVICE ZXSPECTRUM48
+
+    org $8000
+
+    jp start
+
+string:
+    db "hello"
+
+STRING_LENGTH = 5
+
+ROM_CLS = $0daf
+COLOR_ATTR = $5800
+ENTER = $0d
+BLACK_WHITE = $47
+
+start:
+    im 1
+    call ROM_CLS
+    ld hl, string ; (register mode, extended immediate mode)
+    ld b, STRING_LENGTH ; (register mode, immediate mode)
+
+loop:
+    ld a, (hl) ; (register mode, register indirect)
+    rst $10 ; (modified page zero mode) prints character
+    inc hl ; (register mode)
+    dec b ; (register mode)
+    jr nz, loop ; (condition, relative)
+    ld a, ENTER ; (register, immediate)
+    rst $10
+
+    ld a, BLACK_WHITE
+    ld (COLOR_ATTR), a
+
+    ld ix, string ; (register, extented immediate)
+    res 5, (ix) ; (immedite, indexed) capitalizes what under address in ix
+    ld a, (ix) ; (register, indexed)
+    rst $10 ; (zero page)
+
+    ld a, (ix + 1)
+    rst $10
+    ld a, (ix + 2)
+    rst $10
+    ld a, (ix + 3)
+    rst $10
+    ld a, (ix + 4)
+    rst $10
+
+    ret ; (implied addressing mode)
+
+; Deployment: Snapshot
+    SAVESNA "textgen.sna", start
+

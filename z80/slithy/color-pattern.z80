@@ -1,0 +1,57 @@
+    DEVICE ZXSPECTRUM48
+
+    org $8000
+
+start:
+    ld a, %11001100 ; pixel pattern
+    ld de, $4000
+    ld (de), a
+    ex de, hl
+    ld de, $4001
+    ld bc, $200 ;; number of bytes in 16 rows of pixels
+bitmap_loop:
+    ; fill 16 rows of pixels
+    ldi
+    ld a, b
+    or c
+    jr nz, bitmap_loop
+
+    ; fill 16 rows of pixels with pattern shifted to right
+    srl (hl)
+    ld bc, $200
+    ldir
+
+    ; fill 16 rows of pixels with pattern shifted to right (using ldd)
+    srl (hl)
+    ld de, $45FF
+    ldd
+    ld bc, $1FE
+    ld hl, $45FF
+    lddr
+    ld hl, $4600
+    ld (hl), %10011001
+    ld de,$4601
+    ld bc,$1FF
+
+    exx               ; we'll get back to the fourth block later
+    ld hl,$5800
+    ld (hl),$41       ; blue ink on black paper
+    ld de,$5801
+    ld bc,$FF
+color_loop:
+    ldi
+    inc (hl)          ; increment ink color
+    ld a,$07
+    and (hl)          ; check to see if ink set to zero (black)
+    jr nz,next
+    ld (hl),$41       ; re-initialize color
+next:
+    ld a,b
+    or c
+    jr nz,color_loop
+    exx               ; bring back fourth block addresses
+    ldir              ; fill in fourth block
+    ret
+
+; Deployment: Snapshot
+    SAVESNA "color-pattern.sna", start
