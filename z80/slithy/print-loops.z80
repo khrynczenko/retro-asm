@@ -1,0 +1,71 @@
+    DEVICE ZXSPECTRUM48
+
+    org $8000
+
+    jp start
+
+ENTER = $0D
+UPPER_A = $41
+UPPER_Z = $5a
+LOWER_A = $61
+LOWER_Z = $7a
+
+message:
+    db "Like And Subscribe!", ENTER
+
+MSG_LEN = $ - message ; $ means current line address
+
+start:
+    ld hl, message
+    ld b, MSG_LEN
+
+orig_loop:
+    ld a, (hl)
+    rst $10
+    inc hl
+    djnz orig_loop
+
+    ld hl, message
+    ld a, (hl)
+
+lower_loop:
+    cp UPPER_A
+    jr c, print_lower_char ; is A lower than UPPER_A
+    cp UPPER_Z + 1
+    call c, tolower
+
+print_lower_char:
+    rst $10
+    inc hl
+    ld a, (hl)
+    cp ENTER
+    jr nz, lower_loop ; jump if A != ENTER (effecively we loop)
+    rst $10
+
+    ; print as all upercase
+    ld hl, message
+    ld b, MSG_LEN
+upper_loop:
+    ld a, (hl)
+    call toupper
+    rst $10
+    inc hl
+    djnz upper_loop
+
+    ret
+
+tolower:
+    add $20
+    ret
+
+toupper: ; if a value in accumulator is a lower letter <LOWER_A, LOWER_Z> we
+         ; add $20 which makes it an uppercase letter
+    cp LOWER_A
+    ret c ; if A < LOWER_A return (do nothing)
+    cp LOWER_Z + 1
+    ret nc ; if A >= LOWER_Z return (do nothing)
+    sub $20 ; make it uppercase!
+    ret
+
+
+    SAVESNA "print-loops.sna", start
