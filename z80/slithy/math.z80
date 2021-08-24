@@ -1,0 +1,66 @@
+    DEVICE ZXSPECTRUM48
+
+    org $8000
+
+    jp start
+
+ENTER = $0D
+
+scratch:
+    dw 0
+
+start:
+    ld a, $10
+    add a, $02
+    ld hl, $3456
+    call print_afhl
+    ld d, $0E
+    add a, d
+    call print_afhl
+    ret
+
+print_afhl:
+    push hl
+    push af
+    call print_hex
+    ld (scratch), sp
+    ld bc, (scratch)
+    ld a, (bc)
+    call print_hex
+    ld a, h
+    call print_hex
+    ld a, l
+    call print_hex
+    ld a, ENTER
+    rst $10
+    pop af
+    pop hl
+    ret
+
+print_hex:
+    push hl
+    push af
+    ; move upper nibble into the lower nibble by shifing four times
+    srl a
+    srl a
+    srl a
+    srl a
+    call print_hex_digit
+    pop af
+    and $0F
+    call print_hex_digit
+    pop hl
+    ret
+
+print_hex_digit:
+    cp $0A ; if decimal 10 which is b1010 or 0x0A is set (we check using p flag, parity)
+    jp p, print_letter ; if it is at least b1010 it means its hexadecimal A-F
+    or $30 ; we bitwise or 30 to make a character for the digit 0-9
+    jp print_char
+print_letter:
+    add $37
+print_char:
+    rst $10
+    ret
+
+    SAVESNA "math.sna", start
