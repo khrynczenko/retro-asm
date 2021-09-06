@@ -1,0 +1,51 @@
+    DEVICE ZXSPECTRUM48
+
+    org $8000
+
+    jp start
+
+SCREEN_BITMAP = $4000
+BITMAP_SIZE = $1800
+SCREEN_COLOR = $5800
+COLOR_SIZE = $0300
+
+sp_backup:
+    dw 0
+
+start:
+    exx
+    push hl
+
+    ; make stripes
+    ld hl, SCREEN_BITMAP
+    ld de, $FF00
+    ld bc, BITMAP_SIZE / 2
+    call fill_ram
+
+    ld hl, SCREEN_COLOR ; start at beginning of color attr memory
+    ld de, $2A2A ; red on cyan for 2 squares
+    ld bc, COLOR_SIZE / 2 ; whole screen
+    call fill_ram
+
+    pop hl
+    exx
+    ret
+
+fill_ram:
+    ld (sp_backup), sp
+    add hl, bc
+    add hl, bc
+    ld sp, hl
+    ld a, $FF
+.loop:
+    push de
+    dec c
+    jp nz, .loop
+    dec b
+    cp b
+    jp nz, .loop
+    ld sp, (sp_backup)
+    ret
+
+    SAVESNA "stack-fill.sna", start
+
